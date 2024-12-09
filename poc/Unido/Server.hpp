@@ -2,13 +2,14 @@
 #define SERVER_H
 
 #include <WebServer.h>
-#include <Preferences.h>
+#include "config.h" // Asegúrate de incluir config.h
 
-// Declaración externa de variables globales
-extern WebServer server;
-extern Preferences preferences;
+extern WebServer server; // Declaración externa del servidor web
 
-// Función para manejar la página de configuración
+// Función para manejar la página principal del servidor
 void handleRoot();
 
-#endif
+// Función para manejar la solicitud de guardar las credenciales Wi-Fi
+void handleSave();
+
+#endif // SERVER_H

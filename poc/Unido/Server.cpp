@@ -1,12 +1,16 @@
-#include <WebServer.h>
-#include <Preferences.h>
 #include "Server.hpp"
+#include <Preferences.h> // Incluir la librería Preferences
+#include "config.h"
 
-// Definir las variables globales
-WebServer server(80);
-Preferences preferences;
+// Definición de las variables
+const char* ssid = "Tu_SSID";         // Cambia esto por tu SSID
+const char* password = "Tu_Contraseña"; // Cambia esto por tu contraseña
+const char* serverUrl = "http://direccion.del.servidor.com"; // Cambia esto por la URL de tu servidor
 
-// Función para manejar la página de configuración
+Preferences preferences; // Declarar preferencias globalmente
+WebServer server(80);    // Definición del servidor en el puerto 80
+
+// Función para manejar la página principal del servidor
 void handleRoot() {
   String html = R"rawliteral(
     <form action="/save" method="POST">
@@ -15,5 +19,25 @@ void handleRoot() {
       <input type="submit" value="Guardar">
     </form>
   )rawliteral";
+  
   server.send(200, "text/html", html);
+}
+
+// Función para manejar la solicitud de guardar las credenciales Wi-Fi
+void handleSave() {
+  String ssid = server.arg("ssid");
+  String password = server.arg("password");
+
+  if (ssid.isEmpty() || password.isEmpty()) {
+    server.send(400, "text/plain", "Por favor, completa ambos campos.");
+    return;
+  }
+
+  // Guardar en memoria no volátil
+  preferences.begin("wifi", false);
+  preferences.putString("ssid", ssid);
+  preferences.putString("password", password);
+  preferences.end();
+
+  server.send(200, "text/html", "Credenciales guardadas. Reinicia el dispositivo.");
 }

@@ -1,70 +1,46 @@
-#include "config.h"  // Asegúrate de incluir el archivo config.h
+#include "config.h" // Incluir el archivo de configuración para acceder a las variables ssid, password y serverUrl
 #include <WiFi.h>
+#include <HTTPClient.h>
 #include <Preferences.h>
-#include "Server.hpp"
 
-// Guardar las credenciales
-void handleSave() {
-  String ssid = server.arg("ssid");
-  String password = server.arg("password");
+// Función para conectarse al Wi-Fi
+bool connectToWiFi() {
+  WiFi.begin(ssid, password); // Usa las credenciales de config.h
+  Serial.print("Conectando a WiFi");
 
-  if (ssid.isEmpty() || password.isEmpty()) {
-    server.send(400, "text/plain", "Por favor, completa ambos campos.");
-    return;
+  int attempt = 0;
+  while (WiFi.status() != WL_CONNECTED && attempt < 10) {
+    delay(1000);
+    Serial.print(".");
+    attempt++;
   }
 
-  // Guardar en memoria no volátil
-  preferences.begin("wifi", false);
-  preferences.putString("ssid", ssid);
-  preferences.putString("password", password);
-  preferences.end();
-
-  server.send(200, "text/html", "Credenciales guardadas. Reinicia el dispositivo.");
-}
-
-// Intentar conectarse a WiFi
-bool connectToWiFi() {
-  preferences.begin("wifi", true);
-  String storedSSID = preferences.getString("ssid", "");
-  String storedPassword = preferences.getString("password", "");
-  preferences.end();
-
-  if (storedSSID.isEmpty() || storedPassword.isEmpty()) {
-    Serial.println("No hay credenciales almacenadas.");
+  if (WiFi.status() == WL_CONNECTED) {
+    Serial.println("¡Conectado!");
+    Serial.print("Dirección IP: ");
+    Serial.println(WiFi.localIP());
+    return true;
+  } else {
+    Serial.println("No se pudo conectar al Wi-Fi.");
     return false;
   }
-
-  Serial.print("Intentando conectar a WiFi: ");
-  Serial.println(storedSSID);
-
-  WiFi.begin(storedSSID.c_str(), storedPassword.c_str());
-  for (int i = 0; i < 20; i++) {  // Intentar durante 10 segundos
-    if (WiFi.status() == WL_CONNECTED) {
-      Serial.println("Conectado a WiFi.");
-      Serial.print("Dirección IP: ");
-      Serial.println(WiFi.localIP());
-      return true;
-    }
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("\nNo se pudo conectar al WiFi.");
-  return false;
 }
 
-// Intentar conectarse al WiFi almacenado o entrar en modo AP si falla
-void conectarseAWifi() {
-  if (!connectToWiFi()) {
-    // Si falla, iniciar modo punto de acceso
-    Serial.println("Iniciando modo AP...");
-    WiFi.softAP(apSSID, apPassword);  // Asegúrate de que apSSID y apPassword estén definidos en config.h
-    Serial.print("IP del AP: ");
-    Serial.println(WiFi.softAPIP());
+// Función para enviar datos de los sensores al servidor
+void sendSensorData(float humidity, float temperature) {
+  HTTPClient http;
+  http.begin(serverUrl);  // Usa la URL del servidor desde config.h
 
-    // Configurar servidor web para la configuración de Wi-Fi
-    server.on("/", handleRoot);
-    server.on("/save", HTTP_POST, handleSave);
-    server.begin();
-    Serial.println("Servidor web iniciado.");
+  http.addHeader("Content-Type", "application/json");
+
+  String payload = "{\"humidity\": " + String(humidity) + ", \"temperature\": " + String(temperature) + "}";
+  int httpCode = http.POST(payload);
+
+  if (httpCode > 0) {
+    Serial.println("Datos enviados correctamente.");
+  } else {
+    Serial.println("Error al enviar los datos.");
   }
+
+  http.end();
 }
