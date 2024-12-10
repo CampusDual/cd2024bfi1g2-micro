@@ -9,7 +9,7 @@
 Adafruit_SHTC3 shtc3;
 
 void setup() {
-  Serial.begin(115200);  // Iniciar la comunicación serial
+  Serial.begin(9600);  // Iniciar la comunicación serial
   Serial.println("Iniciando...");
 
   Wire.begin();
@@ -28,16 +28,19 @@ void setup() {
     Serial.println(WiFi.softAPIP());
 
     // Iniciar el servidor web
-    server.on("/", handleRoot);
-    server.on("/save", HTTP_POST, handleSave);
-    server.begin();
+    //server.on("/", handleRoot);
+    //server.on("/save", HTTP_POST, handleSave);
+    //server.begin();
+    handleRoot();
+    handleSave();
+
     Serial.println("Servidor web iniciado.");
   }
 }
 
 void loop() {
   // Manejar solicitudes HTTP si está en modo AP
-  if (WiFi.getMode() == WIFI_AP) {
+ /* if (WiFi.getMode() == WIFI_AP) {
     server.handleClient();  // Manejar las solicitudes HTTP
   }
 
@@ -63,5 +66,5 @@ void loop() {
   Serial.println(" *C");
 
   sendSensorData(humidity, temperature); // Enviar los datos al servidor
-  delay(60000); // Esperar 60 segundos antes de enviar nuevos datos
+  delay(60000); // Esperar 60 segundos antes de enviar nuevos datos*/
 }
