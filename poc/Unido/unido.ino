@@ -56,7 +56,7 @@ void loop() {
         if (leerSensor(temp, hum)) {
             enviarDatosServidor(temp, hum);
         }
-        delay(60000); // Esperar 1 minuto antes de la siguiente lectura
+        delay(20000); // Esperar 20 segundos antes de la siguiente lectura
     }
 }
 
@@ -140,9 +140,9 @@ void enviarDatosServidor(float temp, float hum) {
     String macAddress = WiFi.macAddress();
 
     // Crear el JSON con los datos
-    String payload = String("{\"m\":\"") + macAddress + 
-                     String("\",\"t\":") + temp + 
-                     String(",\"h\":") + hum + String("}");
+    String payload = String("{\"DEV_MAC\":\"") + macAddress + 
+                     String("\",\"ME_TEMP\":") + temp + 
+                     String(",\"ME_HUMIDITY\":") + hum + String("}");
     
     // Enviar la solicitud POST
     int httpResponseCode = http.POST(payload);
