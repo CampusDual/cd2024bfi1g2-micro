@@ -84,7 +84,7 @@ void iniciarModoAP() {
         if (server.hasArg("ssid") && server.hasArg("password") && server.hasArg("serverURL")) {
             String ssid = server.arg("ssid");
             String password = server.arg("password");
-            String serverURL = server.arg("serverURL");
+          //  String serverURL = server.arg("serverURL");
 
             preferences.putString("ssid", ssid);
             preferences.putString("password", password);
@@ -139,10 +139,12 @@ void enviarDatosServidor(float temp, float hum) {
     // Obtener la dirección MAC
     String macAddress = WiFi.macAddress();
 
-    // Crear el JSON con los datos
-    String payload = String("{\"DEV_MAC\":\"") + macAddress + 
-                     String("\",\"ME_TEMP\":") + temp + 
-                     String(",\"ME_HUMIDITY\":") + hum + String("}");
+     // Crear el JSON con los datos
+    String payload = "{\"data\": {";
+    payload += "\"DEV_MAC\": \"" + macAddress + "\",";
+    payload += "\"ME_TEMP\": " + String(temp) + ",";
+    payload += "\"ME_HUMIDITY\": " + String(hum);
+    payload += "}}";
     
     // Enviar la solicitud POST
     int httpResponseCode = http.POST(payload);
