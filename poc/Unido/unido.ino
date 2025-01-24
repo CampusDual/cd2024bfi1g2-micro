@@ -141,10 +141,10 @@ void enviarDatosServidor(float temp, float hum) {
 
      // Crear el JSON con los datos
     String payload = "{\"data\": {";
-    payload += "\"DEV_MAC\": \"" + macAddress + "\",";
-    payload += "\"ME_TEMP\": " + String(temp) + ",";
-    payload += "\"ME_HUMIDITY\": " + String(hum);
-    payload += "}}";
+           payload += "\"DEV_MAC\": \"" + macAddress + "\",";
+           payload += "\"ME_TEMP\": " + String(temp) + ",";
+           payload += "\"ME_HUMIDITY\": " + String(hum);
+           payload += "}}";
     
     // Enviar la solicitud POST
     int httpResponseCode = http.POST(payload);
