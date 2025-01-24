@@ -30,6 +30,8 @@ void setup() {
     String password = preferences.getString("password", "");
     String serverURL = preferences.getString("serverURL", "");
 
+  
+
     if (ssid != "" && password != "") {
         WiFi.begin(ssid.c_str(), password.c_str());
         Serial.print("Conectando a Wi-Fi");
@@ -56,7 +58,7 @@ void loop() {
         if (leerSensor(temp, hum)) {
             enviarDatosServidor(temp, hum);
         }
-        delay(20000); // Esperar 20 segundos antes de la siguiente lectura
+        delay(10000); // Esperar 60 segundos antes de la siguiente lectura
     }
 }
 
@@ -71,20 +73,92 @@ void iniciarModoAP() {
     // Configurar servidor web
     server.on("/", HTTP_GET, []() {
         server.send(200, "text/html", R"rawliteral(
-            <form action="/guardar" method="post">
-                SSID: <input type="text" name="ssid"><br>
-                Password: <input type="password" name="password"><br>
-                Server URL: <input type="text" name="serverURL"><br>
-                <input type="submit" value="Guardar">
-            </form>
-        )rawliteral");
+
+            <!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Captive Portal</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f7f9fc;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .container {
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      font-size: 1.8em;
+      color: #333;
+      margin-bottom: 0.5em;
+    }
+    p {
+      color: #555;
+      margin-bottom: 1.5em;
+    }
+    form {
+      display: flex;
+      flex-direction: column;
+    }
+    input[type="text"], input[type="password"] {
+      font-size: 1em;
+      padding: 10px;
+      margin-bottom: 15px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      width: 100%;
+      box-sizing: border-box;
+    }
+    input[type="submit"] {
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 15px;
+      font-size: 1em;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    input[type="submit"]:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Bienvenido</h1>
+    <p>Configuración dei Wi-Fi y Servidor</p>
+    <form action="/guardar" method="POST">
+      <input type="text" name="ssid" placeholder="Nombre WiFi" required>
+      <input type="password" name="password" placeholder="Contraseña" required>
+      <input type="text" name="serverURL" placeholder="URL del Servidor" required>
+      <input type="submit" value="Guardar">
+    </form>
+  </div>
+</body>
+</html>
+)rawliteral");
     });
 
     server.on("/guardar", HTTP_POST, []() {
         if (server.hasArg("ssid") && server.hasArg("password") && server.hasArg("serverURL")) {
             String ssid = server.arg("ssid");
             String password = server.arg("password");
-          //  String serverURL = server.arg("serverURL");
+            String serverURL = server.arg("serverURL");
 
             preferences.putString("ssid", ssid);
             preferences.putString("password", password);
@@ -134,8 +208,9 @@ void enviarDatosServidor(float temp, float hum) {
     }
 
     http.begin(serverURL);
+    http.addHeader("Authorization", "Basic YWRtaW5NaWNyb3M6YWRtaW5taWNyb3MxMjM=");
     http.addHeader("Content-Type", "application/json");
-
+    
     // Obtener la dirección MAC
     String macAddress = WiFi.macAddress();
 
@@ -153,7 +228,9 @@ void enviarDatosServidor(float temp, float hum) {
         Serial.printf("Datos enviados: %s\n", payload.c_str());
         Serial.printf("Respuesta del servidor: %d\n", httpResponseCode);
     } else {
+       Serial.printf("Respuesta del servidor: %d\n", httpResponseCode);
         Serial.printf("Error al enviar datos: %s\n", http.errorToString(httpResponseCode).c_str());
+       
     }
 
     // Liberar recursos HTTP
